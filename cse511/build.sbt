@@ -3,21 +3,23 @@ import sbt.Keys.{libraryDependencies, scalaVersion, version}
 
 lazy val root = (project in file(".")).
   settings(
-    name := "cse511",
+    name := "CSE511_PHASE1_GROUP18",
 
-    version := "0.1",
+    version := "0.1.0",
 
     scalaVersion := "2.11.11",
 
+    organization  := "org.datasyslab",
+
     publishMavenStyle := true,
 
-    mainClass in (Compile, run) := Some("phase1.SparkSQLExample")
+    mainClass := Some("phase1.SparkSQLExample")
   )
 
 libraryDependencies ++= Seq(
-  "org.apache.spark" %% "spark-core" % "2.2.0",
-  "org.apache.spark" %% "spark-sql" % "2.2.0",
-  "org.scalatest" %% "scalatest" % "2.2.4",
-  "org.specs2" %% "specs2-core" % "2.4.16",
-  "org.specs2" %% "specs2-junit" % "2.4.16"
+  "org.apache.spark" %% "spark-core" % "2.2.0" % "provided",
+  "org.apache.spark" %% "spark-sql" % "2.2.0" % "provided",
+  "org.scalatest" %% "scalatest" % "2.2.4" % "test",
+  "org.specs2" %% "specs2-core" % "2.4.16" % "test",
+  "org.specs2" %% "specs2-junit" % "2.4.16" % "test"
 )
