@@ -36,7 +36,7 @@ object SparkSQLExample {
       .master("local[*]")
       .getOrCreate()
 
-    paramsParser(spark, argss)
+    paramsParser(spark, args)
 
     spark.stop()
   }
