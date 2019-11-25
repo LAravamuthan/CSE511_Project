@@ -57,10 +57,10 @@ object HotcellUtils {
       neighborX -= 1
     }
     if (Y == minY || Y == maxY) {
-      neighborX -= 1
+      neighborY -= 1
     }
     if (Z == minZ || Z == maxZ) {
-      neighborX -= 1
+      neighborZ -= 1
     }
     return neighborX * neighborY * neighborZ - 1;
   }
