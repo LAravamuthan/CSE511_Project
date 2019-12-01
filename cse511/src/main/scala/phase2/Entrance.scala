@@ -13,7 +13,7 @@ object Entrance extends App {
     val spark = SparkSession
       .builder()
       .appName("CSE511-HotspotAnalysis-GROUP18")
-      .config("spark.some.config.option", "some-value").master("local[*]")
+      .config("spark.some.config.option", "some-value")//.master("local[*]")
       .getOrCreate()
 
     paramsParser(spark, args)
