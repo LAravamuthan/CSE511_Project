@@ -3,7 +3,7 @@ import sbt.Keys.{libraryDependencies, scalaVersion, version}
 
 lazy val root = (project in file(".")).
   settings(
-    name := "CSE511_PHASE1_GROUP18",
+    name := "CSE511_PHASE2_GROUP18",
 
     version := "0.1.0",
 
@@ -13,7 +13,7 @@ lazy val root = (project in file(".")).
 
     publishMavenStyle := true,
 
-    mainClass := Some("phase1.SparkSQLExample")
+    mainClass := Some("phase2.Entrance")
   )
 
 libraryDependencies ++= Seq(

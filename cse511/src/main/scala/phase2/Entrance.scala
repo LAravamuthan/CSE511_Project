@@ -19,7 +19,7 @@ object Entrance extends App {
     paramsParser(spark, args)
 
   }
-  
+
   private def paramsParser(spark: SparkSession, args: Array[String]): Unit = {
     var paramOffset = 1
     var currentQueryParams = ""
@@ -50,7 +50,7 @@ object Entrance extends App {
     val queryParam = queryParams.split(" ")
     if (queryName.equalsIgnoreCase("hotcellanalysis")) {
       if (queryParam.length != 1) throw new ArrayIndexOutOfBoundsException("[CSE512] Query " + queryName + " needs 1 parameters but you entered " + queryParam.length)
-//      HotcellAnalysis.runHotcellAnalysis(spark, queryParam(0)).limit(50).write.mode(SaveMode.Overwrite).csv(outputPath)
+      HotcellAnalysis.runHotcellAnalysis(spark, queryParam(0)).limit(50).write.mode(SaveMode.Overwrite).csv(outputPath)
     }
     else if (queryName.equalsIgnoreCase("hotzoneanalysis")) {
       if (queryParam.length != 2) throw new ArrayIndexOutOfBoundsException("[CSE512] Query " + queryName + " needs 2 parameters but you entered " + queryParam.length)
