@@ -14,9 +14,9 @@
 %	idem without indent:\cleanstyle{text}
 %	bold, italic, under:\textbf{text}, textit{text}, \underline{text}
 %	table:				\begin{tabular}{c c c} text \end{tabular}	('&' for tab, '\\' for new line)
-%	
+%
 %	use Google for the rest
-%	
+%
 %------------------------------------------------------------------------------
 
 \documentclass[a4paper]{article}
@@ -76,7 +76,7 @@ Aravamuthan Lakshminarayanan\\
 Muffakham Ali Farhan Mohammed\\
 1211111111\\\\
 Rahul Manghnani\\
-1211111111\\\\
+1217633183\\\\
 Shahabudeen Sajith\\
 1216259811\\\\
 Vivek Tiwary\\
@@ -93,39 +93,39 @@ Vivek Tiwary\\
 \section{Tasks} \label{Tasks}
 	\subsection{Phase 1} \label{Phase 1}
     The tasks for Phase 1 involved writing user-defined functions in SparkSQL and using them to perform spatial queries.\\
-    
+
     The \textbf{functions} to be implemented are as follows:
-    
+
     \subsubsection{\cleanstyle{ST\_Contains(queryRectangle, pointString)}}
     \cleancode{
     ST\_Contains(queryRectangle: String, pointString: String): Boolean
     }
-    
+
     Parse the \cleanstyle{pointString} and \cleanstyle{queryRectangle} and check whether the \cleanstyle{queryRectangle} fully contains the point.
-    
+
     \subsubsection{\cleanstyle{ST\_Within(pointString1, pointString2, distance)}}
     Parse the \cleanstyle{pointString1} and \cleanstyle{pointString2} and check the two points are within the given (Euclidean) \cleanstyle{distance}.\\
-    
+
     The \textbf{spatial queries} to be performed are as follows:
-    
+
     \subsubsection{\cleanstyle{Range}}
     Given a query rectangle \cleanstyle{R} and a set of points \cleanstyle{P}, find all the points within \cleanstyle{R}.
-    
+
     \subsubsection{\cleanstyle{Range Join}}
     Given a set of Rectangles \cleanstyle{R} and a set of Points \cleanstyle{S}, find all \cleanstyle{(Point, Rectangle)} pairs such that the point is within the rectangle.
-    
+
     \subsubsection{\cleanstyle{Distance}}
     Given a point location \cleanstyle{P} and distance \cleanstyle{D}, find all points that lie within a distance \cleanstyle{D} from \cleanstyle{P}.
-    
+
     \subsubsection{\cleanstyle{Distance Join}}
     Given a set of Points \cleanstyle{S1} and a set of Points \cleanstyle{S2} and a distance \cleanstyle{D}, find all \cleanstyle{(s1, s2)} pairs such that \cleanstyle{s1} is within a distance \cleanstyle{D} from \cleanstyle{s2}.
-    
+
     \subsection{Phase 2} \label{Phase 1}%----------
     The tasks for Phase 2 involved performing spatial hot spot analysis.\\
-    
+
     \subsubsection{Hot zone analysis}
     The hotness of a rectangle is defined as the count of the number of points located inside it. Given a rectangle and points dataset, the task is to calculate the hotness of all the rectangles.
-    
+
     \subsubsection{Hot cell analysis}
     This task was to apply spatial statistics to spatio-temporal big data in order to identify statistically significant spatial hot spots. Concretely, compute a list of the fifty most significant hot spot cells in time and space as identified using the Getis-Ord $G_i^*$ statistic
     \begin{equation}
@@ -163,9 +163,9 @@ Vivek Tiwary\\
         }
         }
     \end{equation}
-    
+
     where $x_j$ is the attribute value for cell $j$ , $w_{i,j}$ is the spatial weight between cell $i$ and  $j$, $n$ is equal to the total number of cells, and:
-    
+
     \begin{equation}
         \bar{X}
         =
@@ -178,7 +178,7 @@ Vivek Tiwary\\
         n
         }
     \end{equation}
-    
+
     \begin{equation}
         S
         =
@@ -200,7 +200,7 @@ Vivek Tiwary\\
     \end{equation}
 
     The $G_i^*$ statistic is a z-score. The neighborhood for each cell in the space-time cube is established by the neighbors in a grid based on subdividing latitude and longitude uniformly. This spatial neighborhood is created for the preceding, current, and following time periods (i.e., each cell has 26 neighbors). For simplicity of computation, the weight of each neighbor cell is presumed to be equal.
-    
+
 \newpage
 
 \section{Environment} \label{Environment}
@@ -309,7 +309,20 @@ The output matched the given sample output.
 \subsection{Implementation}
 
 \subsubsection{Hot zone}
-To be added
+The hot zone analysis takes as input two CSV files. One CSV file is the taxi trips CSV which will be used to extract the pickup points and the
+second CSV is the zones CSV file for the rectangles for which the hot zone analysis has to be done.
+
+The basic workflow for hot zone analysis is as follows:
+1. Parse the input CSV files to load point data.
+2. Parse the input CSV files to load rectangle data.
+3. Join the point data and rectangle data using ST_CONTAINS to get all points which lie within the extracted rectangles. Please note that
+we have used the ST_CONTAINS from phase 1 for this purpose.
+4. Run a count aggregate function on the join result to count the number of points found within each rectangle. We have grouped by the rectangle
+column since the join result will have multiple point entries for the same rectangle data and we need to count these repeating rectangles. Finally, we have ordered
+by the rectangle column to follow the ordering expected in the problem statement.
+
+We were able to successfully run the code on our local Spark server and verify the sample output for the sample input. The code runs successfully for the larger
+trips dataset as well.
 
 \subsubsection{Hot cell}
 To be added
@@ -331,17 +344,19 @@ The output matched the given sample output.
 
 \subsection{Aravamuthan Lakshminarayanan}
 \begin{enumerate}
-    \item 
+    \item
 \end{enumerate}
 
 \subsection{Muffakham Ali Farhan Mohammed}
 \begin{enumerate}
-    \item 
+    \item
 \end{enumerate}
 
 \subsection{Rahul Manghnani}
 \begin{enumerate}
-    \item 
+    \item Implemented Hot Zone Analysis of Phase 2.
+		\item Tested and verified Hot Zone Analysis on local Spark server with all datasets.
+		\item Contributed to System Documentation report.
 \end{enumerate}
 
 \subsection{Shahabudeen Sajith}
@@ -354,7 +369,7 @@ The output matched the given sample output.
 
 \subsection{Vivek Tiwary}
 \begin{enumerate}
-    \item 
+    \item
 \end{enumerate}
 
 
