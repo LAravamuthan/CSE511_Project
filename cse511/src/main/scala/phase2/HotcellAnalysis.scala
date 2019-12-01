@@ -1,8 +1,6 @@
 package cse512
 
-import java.util.logging.{Level, Logger}
-
-import org.apache.log4j.Level
+import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.functions._
@@ -13,71 +11,110 @@ object HotcellAnalysis {
   Logger.getLogger("akka").setLevel(Level.WARN)
   Logger.getLogger("com").setLevel(Level.WARN)
 
-def runHotcellAnalysis(spark: SparkSession, pointPath: String): DataFrame =
-{
-  // Load the original data from a data source
-  var pickupInfo = spark.read.format("com.databricks.spark.csv").option("delimiter",";").option("header","false").load(pointPath);
-  pickupInfo.createOrReplaceTempView("nyctaxitrips")
-  pickupInfo.show()
+  def runHotcellAnalysis(spark: SparkSession, pointPath: String): DataFrame = {
+    // Load the original data from a data source
+    var pickupInfo = spark.read.format("com.databricks.spark.csv").option("delimiter", ";").option("header", "false").load(pointPath);
+    pickupInfo.createOrReplaceTempView("nyctaxitrips")
+    pickupInfo.show()
 
-  // Assign cell coordinates based on pickup points
-  spark.udf.register("CalculateX",(pickupPoint: String)=>((
-    HotcellUtils.CalculateCoordinate(pickupPoint, 0)
-    )))
-  spark.udf.register("CalculateY",(pickupPoint: String)=>((
-    HotcellUtils.CalculateCoordinate(pickupPoint, 1)
-    )))
-  spark.udf.register("CalculateZ",(pickupTime: String)=>((
-    HotcellUtils.CalculateCoordinate(pickupTime, 2)
-    )))
-  pickupInfo = spark.sql("select CalculateX(nyctaxitrips._c5),CalculateY(nyctaxitrips._c5), CalculateZ(nyctaxitrips._c1) from nyctaxitrips")
-  var newCoordinateName = Seq("x", "y", "z")
-  pickupInfo = pickupInfo.toDF(newCoordinateName:_*)
-  pickupInfo.show()
+    // Assign cell coordinates based on pickup points
+    spark.udf.register("CalculateX", (pickupPoint: String) => ((
+      HotcellUtils.CalculateCoordinate(pickupPoint, 0)
+      )))
+    spark.udf.register("CalculateY", (pickupPoint: String) => ((
+      HotcellUtils.CalculateCoordinate(pickupPoint, 1)
+      )))
+    spark.udf.register("CalculateZ", (pickupTime: String) => ((
+      HotcellUtils.CalculateCoordinate(pickupTime, 2)
+      )))
+    pickupInfo = spark.sql("select CalculateX(nyctaxitrips._c5),CalculateY(nyctaxitrips._c5), CalculateZ(nyctaxitrips._c1) from nyctaxitrips")
+    var newCoordinateName = Seq("x", "y", "z")
+    pickupInfo = pickupInfo.toDF(newCoordinateName: _*)
+    pickupInfo.createOrReplaceTempView("pickupInfoView")
+    pickupInfo.show()
 
-  // Define the min and max of x, y, z
-  val minX = -74.50/HotcellUtils.coordinateStep
-  val maxX = -73.70/HotcellUtils.coordinateStep
-  val minY = 40.50/HotcellUtils.coordinateStep
-  val maxY = 40.90/HotcellUtils.coordinateStep
-  val minZ = 1
-  val maxZ = 31
-  val numCells = (maxX - minX + 1)*(maxY - minY + 1)*(maxZ - minZ + 1)
+    // Define the min and max of x, y, z
+    val minX = -74.50 / HotcellUtils.coordinateStep
+    val maxX = -73.70 / HotcellUtils.coordinateStep
+    val minY = 40.50 / HotcellUtils.coordinateStep
+    val maxY = 40.90 / HotcellUtils.coordinateStep
+    val minZ = 1
+    val maxZ = 31
+    val numCells = (maxX - minX + 1) * (maxY - minY + 1) * (maxZ - minZ + 1)
+    print(numCells)
 
-  // YOU NEED TO CHANGE THIS PART
+    // first select all x , y and z pairs and store it in one table the criteria her is that minX <= x <= maxX and so on for y and z ordered by  day of the month followed by
+    // X or Y coordinate
 
-  val pDF = spark.sql("select x,y,z from pickupInfo where x>=" + minX + " and x<= " + maxX + " and y>= " + minY + " and y<= " + maxY + " and z>= " + minZ + " and z<= " + maxZ + " order by z,y,x").persist(); //persist() here creates a Data frame in the memory as select would only use map and hence has no action related to it 
-  pDF.createOrReplaceTempView("Df0") //created the Data frame as Df0
-  
-  val pointsDf = spark.sql("select x,y,z,count(*) as points from Df0 group by z,y,x order by z,y,x").persist();
-  pointsDf.createOrReplaceTempView("Df1")
+    pickupInfo = spark.sql("SELECT x as X,y as Y,z as Z  FROM pickupInfoView WHERE x>= "
+      + minX + " AND x<= " + maxX + " AND y>= " + minY + " AND y<= " + maxY + " AND  z>= " + minZ + " AND z<= "
+      + maxZ + " ORDER BY  z, y, x");
+    pickupInfo.createOrReplaceTempView("CELLSOFINTEREST")
+    //pickupInfo.show()
 
-  spark.udf.register("square", (inputVal: Int) => ((HotcellUtils.squaredValue(inputVal))))
+    // make list of unique pairs if X, Y, Z and their frequency of occurrence in a table  ordered by day of month , y, x
+    pickupInfo = spark.sql("SELECT X, Y, Z, count(*) AS FREQUENCY FROM CELLSOFINTEREST GROUP by X, Y, Z ORDER BY Z, Y, X")
+    pickupInfo.createOrReplaceTempView("CELLFREQUENCYVIEW")
+    //pickupInfo.show()
 
-  val pointSum = spark.sql("select sum(points) as sumvalue, sum(square(points)) as sumsquare from Df1");
-  pointSum.createOrReplaceTempView("pointSum")
+    // get the Total sum of occurences of all cells in order to get the Mean to be used later.
+    val sumTotalOfFrequencies = spark.sql("SELECT  SUM(FREQUENCY) AS TOTAL FROM CELLFREQUENCYVIEW")
+    sumTotalOfFrequencies.createOrReplaceTempView("SUMTOTALOFFREQUENCIES")
+    //sumTotalOfFrequencies.show()
 
-  val ptsSum = pointSum.first().getDouble(0)
-  val sqSum = pointSum.first().getDouble(1)
-  val average = (ptsSum.toDouble/numCells.toDouble)
-  val standardDeviation = math.sqrt(((sqSum.toDouble/numCells.toDouble).toDouble - (average.toDouble * average.toDouble).toDouble).toDouble).toDouble
-
-  spark.udf.register("Neighbours", (minX: Int, minY: Int, minZ: Int, maxX: Int, maxY: Int, maxZ: Int, inputX: Int, inputY: Int, inputZ: Int)
-      => ((HotcellUtils.Neighbours(minX, minY, minZ, maxX, maxY, maxZ, inputX, inputY, inputZ))))
-
-  val neighbours = spark.sql("select Neighbours("+minX + "," + minY + "," + minZ + "," + maxX + "," + maxY + "," + maxZ + "," + "temp1.x,temp1.y,temp1.z) as nCount, temp1.x as x, temp1.y as y, temp1.z as z, sum(temp2.points) as totalsum from Df1 as temp1, Df1 as temp2 where (temp2.x = temp1.x+1 or temp2.x = temp1.x or temp2.x = temp1.x-1) and (temp2.y = temp1.y+1 or temp2.y = temp1.y or temp2.y =temp1.y-1) and (temp2.z = temp1.z+1 or temp2.z = temp1.z or temp2.z =temp1.z-1) group by temp1.z,temp1.y,temp1.x order by temp1.z,temp1.y,temp1.x").persist()
-
-  neighbours.createOrReplaceTempView("Df2");
-  spark.udf.register("GScore", (x: Int, y: Int, z: Int, mean:Double, sd: Double, countn: Int, sumn: Int, numcells: Int) => ((
-      HotcellUtils.gStatistic(x, y, z, mean, sd, countn, sumn, numcells))))
-      
-  val neighbours1 = spark.sql("select GScore(x,y,z,"+average+","+standardDeviation+",ncount,totalsum,"+numCells+") as gtstat, x, y, z from Df2 order by gtstat desc");
-  neighbours1.createOrReplaceTempView("Df3")
-      
-  val finalresult = spark.sql("select x,y,z from Df3")
-  finalresult.createOrReplaceTempView("Df4")
+    val mean = (sumTotalOfFrequencies.first().getLong(0).toDouble / numCells.toDouble)
+    print("the mean is ")
+    println(mean)
 
 
-  return pickupInfo // YOU NEED TO CHANGE THIS PART
-}
+    /* Now we go on to find the second Moment in order to get the standard deviation, VAR(X) = E(X^2) - E(X)^2 , standardDeviation = squart(VAR(X))
+    *  For getting the second moment of all entries we create a Table for all squared values using a User defined function as below
+    * */
+
+    spark.udf.register("SQUARED", (inputX: Int) => (((inputX * inputX).toDouble)))
+
+    val totalOfSquaredFrequencies = spark.sql("SELECT SUM(SQUARED(FREQUENCY)) AS TOTALOFSQUAREDVALUES FROM CELLFREQUENCYVIEW")
+    totalOfSquaredFrequencies.createOrReplaceTempView("SUMSQUAREDTOTALOFFREQUENCIES")
+    //totalOfSquaredFrequencies.show()
+
+
+    val standardDeviation = scala.math.sqrt(((totalOfSquaredFrequencies.first().getDouble(0) / numCells.toDouble) -
+      (mean.toDouble * mean.toDouble)))
+    print("the standard deviation is ")
+    println(standardDeviation)
+
+
+    spark.udf.register("SurroundingCells", (X: Int, Y: Int, Z: Int, minX: Int, maxX: Int, minY: Int, maxY: Int,
+                                            minZ: Int, maxZ: Int) =>
+      ((HotcellUtils.calculateSurroundingCellsToConsider(X, Y, Z, minX, minY, minZ, maxX, maxY, maxZ))))
+
+    /*
+    * Now we create a view which will have three columns no. of surrounding cells, X, Y and Z of the cell in question and sums of frequency contribution
+    * of its the cell in question's surrounding, we self join on CELLFREQUENCYVIEW on values x , y and z varying from n-1 to n+ 1 this table will help us get the
+    * z score which require surrounding counts and their frequencies calculating the same is prime objective in creating below view
+    * */
+
+    val surroundingCellsResults = spark.sql("SELECT SurroundingCells(CFV1.X, CFV1.Y, CFV1.Z, " + minX + "," + maxX + "," + minY + "," + maxY + "," + minZ + "," + maxZ + ") "
+      + "AS neighbour_count, CFV1.X AS X, CFV1.Y AS Y, CFV1.Z AS Z, SUM(CFV2.FREQUENCY) AS tot_surr_fre FROM CELLFREQUENCYVIEW AS CFV1, CELLFREQUENCYVIEW AS CFV2 "
+      + "WHERE (CFV2.X = CFV1.X+1 or CFV2.X = CFV1.X or CFV2.X = CFV1.X-1) AND (CFV2.Y = CFV1.Y+1 OR CFV2.Y = CFV1.Y OR CFV2.Y = CFV1.Y-1) "
+      + "AND (CFV2.Z = CFV1.Z+1 OR CFV2.Z = CFV1.Z OR CFV2.Z = CFV1.Z-1) GROUP BY CFV1.Z, CFV1.Y, CFV1.X ORDER BY CFV1.Z, CFV1.Y, CFV1.X")
+    surroundingCellsResults.createOrReplaceTempView("surroundingCellsView")
+    //surroundingCellsResults.show()
+
+    /*now we form the zSCore view using zScore user defined function for each cell*/
+
+    spark.udf.register("ZScore", (surroundingCells: Int, totalFrequencies: Int, numCells: Int, x: Int, y: Int, z: Int, mean: Double, standardDeviation: Double) =>
+      ((HotcellUtils.calculateZScore(surroundingCells, totalFrequencies, numCells, x, y, z, mean, standardDeviation))))
+
+    pickupInfo = spark.sql("SELECT ZScore(neighbour_count, tot_surr_fre, " + numCells + ", x, y, z,"
+      + mean + ", " + standardDeviation + ") as Gi, X, Y, Z FROM surroundingCellsView ORDER BY Gi DESC");
+    pickupInfo.createOrReplaceTempView("zScoresView")
+    pickupInfo.show()
+
+    pickupInfo = spark.sql("SELECT X, Y, Z FROM zScoresView")
+    pickupInfo.createOrReplaceTempView("finalResultsView")
+    pickupInfo.show()
+
+    return pickupInfo
+  }
 }
