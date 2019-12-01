@@ -1,0 +1,362 @@
+
+%-------------------------------LATEX SYNTAX----------------------------------
+%
+%	enter:				\\, \linebreak, \newline
+%	new page: 			\newpage
+%	tab:				\tab
+%	new section:		\section{name} text
+%	new paragraph		\subsection{name} text	(subsub...section{name} for more layers)
+%	refer:				\nameref{label name}	(place "\label{name}" at the position you want to refer to)
+%	%, &, $, etc:		\%, \&, \$, etc		(these are latex operators, add a "\" to type it as text)
+%	add comment:		\commred{text}, \commblue{text}, \commpurp{text}, \commgreen{text}
+%	bullet points:		\begin{itemize} \item{text} ... \item{text} \end{itemize}
+%	clean code:			\cleancode{text}
+%	idem without indent:\cleanstyle{text}
+%	bold, italic, under:\textbf{text}, textit{text}, \underline{text}
+%	table:				\begin{tabular}{c c c} text \end{tabular}	('&' for tab, '\\' for new line)
+%	
+%	use Google for the rest
+%	
+%------------------------------------------------------------------------------
+
+\documentclass[a4paper]{article}
+
+\usepackage[utf8x]{inputenc}
+\usepackage[british,UKenglish]{babel}
+\usepackage{amsmath}
+%\usepackage{titlesec}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{fancyref}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{scrextend}
+\usepackage{setspace}
+\usepackage{xargs}
+\usepackage{multicol}
+\usepackage{nameref}
+\usepackage[pdftex,dvipsnames]{xcolor}
+\usepackage{sectsty}
+
+\graphicspath{ {images/} }
+\newcommand\tab[1][1cm]{\hspace*{#1}}
+\hypersetup{colorlinks=true, linkcolor=black}
+\interfootnotelinepenalty=10000
+%\titleformat*{\subsubsection}{\large\bfseries}
+\subsubsectionfont{\large}
+\subsectionfont{\Large}
+\sectionfont{\LARGE}
+\definecolor{cleanOrange}{HTML}{D14D00}
+\definecolor{cleanYellow}{HTML}{FFFF99}
+\definecolor{cleanBlue}{HTML}{3d0099}
+%\newcommand{\cleancode}[1]{\begin{addmargin}[3em]{3em}\fcolorbox{cleanOrange}{cleanYellow}{\texttt{\textcolor{cleanOrange}{#1}}}\end{addmargin}}
+\newcommand{\cleancode}[1]{\begin{addmargin}[3em]{3em}\texttt{\textcolor{cleanOrange}{#1}}\end{addmargin}}
+\newcommand{\cleanstyle}[1]{\text{\textcolor{cleanOrange}{\texttt{#1}}}}
+
+
+\usepackage[colorinlistoftodos,prependcaption,textsize=footnotesize]{todonotes}
+\newcommandx{\commred}[2][1=]{\textcolor{Red}
+{\todo[linecolor=red,backgroundcolor=red!25,bordercolor=red,#1]{#2}}}
+\newcommandx{\commblue}[2][1=]{\textcolor{Blue}
+{\todo[linecolor=blue,backgroundcolor=blue!25,bordercolor=blue,#1]{#2}}}
+\newcommandx{\commgreen}[2][1=]{\textcolor{OliveGreen}{\todo[linecolor=OliveGreen,backgroundcolor=OliveGreen!25,bordercolor=OliveGreen,#1]{#2}}}
+\newcommandx{\commpurp}[2][1=]{\textcolor{Plum}{\todo[linecolor=Plum,backgroundcolor=Plum!25,bordercolor=Plum,#1]{#2}}}
+
+
+%-----------------------------------------BEGIN DOC----------------------------------------
+
+\begin{document}
+
+\title{
+{\Huge CSE 511: Group 18{\large\linebreak\\} System Documentation{\large\linebreak\\}}
+}
+\author{
+Aravamuthan Lakshminarayanan\\
+1211111111\\\\
+Muffakham Ali Farhan Mohammed\\
+1211111111\\\\
+Rahul Manghnani\\
+1211111111\\\\
+Shahabudeen Sajith\\
+1216259811\\\\
+Vivek Tiwary\\
+1211111111\\\\
+}
+\date{1 December 2019}
+\maketitle
+\newpage
+
+
+\tableofcontents\label{c}
+\newpage
+
+\section{Tasks} \label{Tasks}
+	\subsection{Phase 1} \label{Phase 1}
+    The tasks for Phase 1 involved writing user-defined functions in SparkSQL and using them to perform spatial queries.\\
+    
+    The \textbf{functions} to be implemented are as follows:
+    
+    \subsubsection{\cleanstyle{ST\_Contains(queryRectangle, pointString)}}
+    \cleancode{
+    ST\_Contains(queryRectangle: String, pointString: String): Boolean
+    }
+    
+    Parse the \cleanstyle{pointString} and \cleanstyle{queryRectangle} and check whether the \cleanstyle{queryRectangle} fully contains the point.
+    
+    \subsubsection{\cleanstyle{ST\_Within(pointString1, pointString2, distance)}}
+    Parse the \cleanstyle{pointString1} and \cleanstyle{pointString2} and check the two points are within the given (Euclidean) \cleanstyle{distance}.\\
+    
+    The \textbf{spatial queries} to be performed are as follows:
+    
+    \subsubsection{\cleanstyle{Range}}
+    Given a query rectangle \cleanstyle{R} and a set of points \cleanstyle{P}, find all the points within \cleanstyle{R}.
+    
+    \subsubsection{\cleanstyle{Range Join}}
+    Given a set of Rectangles \cleanstyle{R} and a set of Points \cleanstyle{S}, find all \cleanstyle{(Point, Rectangle)} pairs such that the point is within the rectangle.
+    
+    \subsubsection{\cleanstyle{Distance}}
+    Given a point location \cleanstyle{P} and distance \cleanstyle{D}, find all points that lie within a distance \cleanstyle{D} from \cleanstyle{P}.
+    
+    \subsubsection{\cleanstyle{Distance Join}}
+    Given a set of Points \cleanstyle{S1} and a set of Points \cleanstyle{S2} and a distance \cleanstyle{D}, find all \cleanstyle{(s1, s2)} pairs such that \cleanstyle{s1} is within a distance \cleanstyle{D} from \cleanstyle{s2}.
+    
+    \subsection{Phase 2} \label{Phase 1}%----------
+    The tasks for Phase 2 involved performing spatial hot spot analysis.\\
+    
+    \subsubsection{Hot zone analysis}
+    The hotness of a rectangle is defined as the count of the number of points located inside it. Given a rectangle and points dataset, the task is to calculate the hotness of all the rectangles.
+    
+    \subsubsection{Hot cell analysis}
+    This task was to apply spatial statistics to spatio-temporal big data in order to identify statistically significant spatial hot spots. Concretely, compute a list of the fifty most significant hot spot cells in time and space as identified using the Getis-Ord $G_i^*$ statistic
+    \begin{equation}
+        G_i^*
+        =
+        \frac
+        {
+        \sum_{j=1}^{n}
+        w_{i,j} x_j
+        -
+        \bar{X}
+        \sum_{j=1}^{n}
+        w_{i,j}
+        }
+        {
+        S
+        \sqrt
+        {
+        \frac
+        {
+        [
+        n
+        \sum_{j=1}^{n}
+        w_{i,j}^2
+        -
+        (
+        \sum_{j=1}^{n}
+        w_{i,j}
+        )^2
+        ]
+        }
+        {
+        n - 1
+        }
+        }
+        }
+    \end{equation}
+    
+    where $x_j$ is the attribute value for cell $j$ , $w_{i,j}$ is the spatial weight between cell $i$ and  $j$, $n$ is equal to the total number of cells, and:
+    
+    \begin{equation}
+        \bar{X}
+        =
+        \frac
+        {
+        \sum_{j=1}^{n}
+        x_j
+        }
+        {
+        n
+        }
+    \end{equation}
+    
+    \begin{equation}
+        S
+        =
+        \sqrt
+        {
+        \frac
+        {
+        \sum_{j=1}^{n}
+        x_j^2
+        }
+        {
+        n
+        }
+        -
+        (
+        \bar{X}
+        )^2
+        }
+    \end{equation}
+
+    The $G_i^*$ statistic is a z-score. The neighborhood for each cell in the space-time cube is established by the neighbors in a grid based on subdividing latitude and longitude uniformly. This spatial neighborhood is created for the preceding, current, and following time periods (i.e., each cell has 26 neighbors). For simplicity of computation, the weight of each neighbor cell is presumed to be equal.
+    
+\newpage
+
+\section{Environment} \label{Environment}
+The code is written in Scala to run against Apache Spark. IntelliJ is the IDE of choice. A system with at least 8 GB of RAM and 128 GB of Storage is recommended for locally running the Spark application.
+
+\subsection{Requirements}
+\begin{enumerate}
+    \item JDK 1.8.0
+    \item Python 3.6
+    \item Scala 2.11.12
+    \item Spark 2.4.4
+    \item sbt 0.13.17
+\end{enumerate}
+
+\subsection{Path}
+\cleancode{
+export JAVA\_HOME=$\sim$/jdk1.8.0\_162.jdk/Contents/Home \\
+export SPARK\_HOME=$\sim$/spark-2.4.4-bin-hadoop2.7 \\
+export SBT\_HOME=$\sim$/sbt \\
+export SCALA\_HOME=$\sim$/scala-2.11.12 \\
+export PYSPARK\_PYTHON=python3 \\
+export PATH="$\sim$/Python.framework/Versions/3.6/bin":\$PATH \\
+export PATH=\$JAVA\_HOME/bin:\$PATH \\
+export PATH=\$SBT\_HOME/bin:\$PATH \\
+export PATH=\$SBT\_HOME/lib:\$PATH \\
+export PATH=\$SCALA\_HOME/bin:\$PATH \\
+export PATH=\$SCALA\_HOME/lib:\$PATH \\
+export PATH=\$SPARK\_HOME/bin:\$PATH \\
+export PATH=\$SPARK\_HOME/lib:\$PATH
+}
+
+\subsection{Source Code}
+The source code for the entire project is hosted as a private repository over Github. \href{https://github.com/hexhog/CSE511_Project}{https://github.com/hexhog/CSE511\_Project}
+
+
+\subsection{IntelliJ Setup}
+\begin{enumerate}
+\item Import the project into the IDE.
+\item Select the JDK and Scala version when prompted.
+\item Once the project is up and the dependencies have been installed, right click on the main class and select run. The main class for Phase 1 is \cleanstyle{SparkSqlExample.scala} and the main class for Phase 2 is \cleanstyle{Entrance.scala}
+\item Append \cleanstyle{.master("local[\*]")} after  \cleanstyle{.config("spark.some.config.option", "some-value")} to tell IDE the master IP is localhost.
+\end{enumerate}
+
+\subsection{Submitting the code to Spark}
+\begin{enumerate}
+    \item Go to project root folder.
+    \item Run \cleanstyle{sbt clean assembly}
+    \item Find the packaged jar in \cleanstyle{target/scala-2.11/}
+    \item Submit the jar to Spark using Spark command \cleanstyle{spark-submit target/scala-2.11/\_.jar}.
+\end{enumerate}
+
+\subsection{Testing on a cluster locally}
+\begin{enumerate}
+    \item Start the master \cleanstyle{spark-2.4.4-bin-hadoop2.7/sbin/start-master.sh}
+    \item Spawn workers in separate shells \cleanstyle{spark-2.4.4-bin-hadoop2.7/bin/spark-class }\\ \cleanstyle{org.apache.spark.deploy.worker.Worker  spark://localhost:7077 -c 1 -m 1024M}
+    \item Submit the jar to the master using \\ \cleanstyle{spark-submit --master spark://localhost:7077 target/scala-2.11/\_.jar}.
+\end{enumerate}
+
+\newpage
+
+\section{Phase 1} \label{Phase 1}
+
+\subsection{Implementation}
+
+\subsubsection{\cleanstyle{ST\_Contains(queryRectangle, pointString)}}
+\cleanstyle{ST\_Contains} first computes the four corner points, each as a pair of coordinates, for the given \cleanstyle{queryRectangle}. The function then checks if the coordnate pair given by \cleanstyle{pointString} lies in between these coordinates.
+
+\subsubsection{\cleanstyle{ST\_Within(pointString1, pointString2, distance)}}
+\cleanstyle{ST\_Contains} computes the Euclidean distance between the two coordinates given by \cleanstyle{pointString1} and \cleanstyle{pointString2}. This distance is then compared with \cleanstyle{distance}.
+
+\subsubsection{\cleanstyle{Range}}
+\cleanstyle{Range} calls \cleanstyle{ST\_Contains} on the given set of points and rectangle.
+
+\subsubsection{\cleanstyle{Range Join}}
+\cleanstyle{Range Join} calls \cleanstyle{ST\_Contains} on the given set of points and the set of rectangles.
+
+\subsubsection{\cleanstyle{Distance}}
+\cleanstyle{Distance} calls \cleanstyle{ST\_Within} on the source point and the given set of points.
+
+\subsubsection{\cleanstyle{Distance Join}}
+\cleanstyle{Distance Join} calls \cleanstyle{ST\_Within} between the two sets of points.
+
+\subsection{Testing}
+The code was tested against the given sample example input.
+
+\cleancode{
+spark-submit target/scala-2.11/Phase1.jar result/output  \\
+rangequery  src/resources/arealm10000.csv  \\
+-93.63173,33.0183,-93.359203,33.219456  \\
+rangejoinquery  src/resources/arealm10000.csv  \\
+src/resources/zcta10000.csv  \\
+distancequery  src/resources/arealm10000.csv  \\
+-88.331492,32.324142  1 \\
+distancejoinquery  \\
+src/resources/arealm10000.csv  src/resources/arealm10000.csv  0. \\
+}
+
+The output matched the given sample output.
+
+\cleancode{4 7612 302 123362}
+
+\newpage
+
+\section{Phase 2} \label{Phase 2}
+\subsubsection{Hot zone}
+To be added
+
+\subsubsection{Hot cell}
+To be added
+
+\subsection{Testing}
+The code was tested against the given sample example input.
+
+\cleancode{
+spark-submit target/scala-2.11/Phase2.jar result/output \\
+hotzoneanalysis src/resources/point-hotzone.csv \\ src/resources/zone-hotzone.csv \\
+hotcellanalysis src/resources/yellow\_tripdata\_2009-01\_point.csv \\
+}
+
+The output matched the given sample output.
+
+\newpage
+
+\section{Task Distribution}
+
+\subsection{Aravamuthan Lakshminarayanan}
+\begin{enumerate}
+    \item 
+\end{enumerate}
+
+\subsection{Muffakham Ali Farhan Mohammed}
+\begin{enumerate}
+    \item 
+\end{enumerate}
+
+\subsection{Rahul Manghnani}
+\begin{enumerate}
+    \item 
+\end{enumerate}
+
+\subsection{Shahabudeen Sajith}
+\begin{enumerate}
+    \item Shared documentation to setup the environment.
+    \item Implemented Phase 1 of the project.
+    \item Tested Phase 2 of the project on local cluster setup.
+    \item Contributed to System Documentation report.
+\end{enumerate}
+
+\subsection{Vivek Tiwary}
+\begin{enumerate}
+    \item 
+\end{enumerate}
+
+
+
+\newpage
+
+
+\end{document}
