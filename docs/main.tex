@@ -79,10 +79,10 @@ Rahul Manghnani\\
 1217633183\\\\
 Shahabudeen Sajith\\
 1216259811\\\\
-Vivek Tiwary\\
-1217045934\\\\
 Sudarsan Balaji Manikandan\\
 1217178521\\\\
+Vivek Tiwary\\
+1217045934\\\\
 }
 \date{1 December 2019}
 \maketitle
@@ -320,18 +320,22 @@ The hot zone analysis takes two CSV files as input. Pickup points are extracted 
     \item Run a count aggregate function on the join result to count the number of points found within each rectangle. We have grouped by the rectangle column since the join result will have multiple point entries for the same rectangle data and we need to count these repeating rectangles.
     \item Order the result by the rectangle column to follow the ordering expected in the problem statement.
 \end{enumerate}
-\\
-\\*We were able to successfully run the code on our local Spark server and verify the sample output for the sample input. The code runs successfully for the more extensive dataset as well. For the more comprehensive dataset, we tried running it on a cluster to verify the results. For this, we used an Azure cluster with HDInsight3.6 and Spark 2.2.0. On submitting the application, we were able to run the code and verify the results obtained successfully.
+
+
+We were able to successfully run the code on our local Spark server and verify the sample output for the sample input. The code runs successfully for the more extensive dataset as well. For the more comprehensive dataset, we tried running it on a cluster to verify the results. For this, we used an Azure cluster with HDInsight3.6 and Spark 2.2.0. On submitting the application, we were able to run the code and verify the results obtained successfully.
 
 \subsubsection{Hot cell}
 
 \begin{enumerate}
-    \item \textbf{Getting pairs(cells) in range :} To obtain pairs of x, y and z values in which x and y are coordinates and z is the day of the month, we did a select query from all data set and stored the results as a view (CELLSOFINTEREST) to be used later  with predicate being the fact that x, y and z each should be in range of min and max values of x, y and z provided.
-    \item \textbf{Getting counts of unique pairs :} To obtain unique pairs of x, y and z from the previously created view(CELLSOFINTEREST), we do another select query with grouping on x,y and z and also making a column of individual cell combination frequencies(this column is to be used later for further calculation) and store as a view(CELLFREQUENCYVIEW).
-    \item \textbf{Finding the mean :} For obtaining mean we make use of the previously created view(CELLFREQUENCYVIEW), to get the total sum of all frequencies, then dividing it by the total number of cells gives us the mean of all frequency values.
-    \item \textbf{Finding the standard deviation :} We know that variance is  Var(X) = E(X2) - E(X)2 and standard deviation (σ) is the square root of variance. We already have the first moment that is E(X) (mean) and we need to find the second moment E(X2). To get the same we first get the squared values each from previously created view using a User Defined Function (SQUARED) and then getting the sum total of squared frequencies, dividing this value with total number of cells in consideration gives us the second moment. With E(X2) and E(X), we obtain the standard deviation.
-    \item \textbf{Finding the neighbouring cells and their contribution :} Surrounding Cells are found by running an inner join on the cells frequency table (CELLFREQUENCYVIEW), the inner join has to be done such that it considers only adjacent cells, for 3 dimensional(x, y and z) data each cell has (3 * 3 * 3 - 1) neighbour(s) (-1 here is to remove itself)  likewise if the cell is at the corners then the degree of freedom of that dimension decreases, hence a cell at x corner has (2 * 3 * 3 - 1) neighbour(s) or cells at x, y and z corners have (2 * 2 * 2 - 1) corners. To handle all these test cases in finding the neighbours we have used a user-defined function SurroundingCells. To find the contributions of the neighbour for each x,y,z we use sum aggregate function on neighbouring frequencies. Using these data we create a view which will have five columns -  no. of surrounding cells, X, Y and Z of the cell in question and sums of frequency contribution.
-    \item \textbf{Finding the Zscore :} We use a user-defined function ZScore to calculate the Zscore for an individual cell, using the number of neighbouring cells and their contributions for each cell. We also use the fact that the weight of the individual cell is homogeneous and equal to 1. Hence we use the formula previously discussed and get the Zscore for individual cell and store the cells in descending order of Z-scores (in view finalResultsView) and return the corresponding results.
+    \item \textbf{Getting pairs(cells) in range :} To obtain pairs of x, y and z values in which x and y are coordinates and z is the day of the month, we did a select query from all data set and stored the results as a view (\cleanstyle{CELLSOFINTEREST}) to be used later  with predicate being the fact that x, y and z each should be in range of min and max values of x, y and z provided.
+    
+    \item \textbf{Getting counts of unique pairs :} To obtain unique pairs of x, y and z from the previously created view(\cleanstyle{CELLSOFINTEREST}), we do another select query with grouping on x,y and z and also making a column of individual cell combination frequencies(this column is to be used later for further calculation) and store as a view(\cleanstyle{CELLFREQUENCYVIEW}).
+    
+    \item \textbf{Finding the mean :} For obtaining mean we make use of the previously created view(\cleanstyle{CELLFREQUENCYVIEW}), to get the total sum of all frequencies, then dividing it by the total number of cells gives us the mean of all frequency values.
+    
+    \item \textbf{Finding the standard deviation :} We know that variance is  $Var(X) = E(X^2) - E(X)^2$ and standard deviation ($\sigma$) is the square root of variance. We already have the first moment that is $E(X)$ (mean) and we need to find the second moment $E(X^2)$. To get the same we first get the squared values each from previously created view using a User Defined Function (\cleanstyle{SQUARED}) and then getting the sum total of squared frequencies, dividing this value with total number of cells in consideration gives us the second moment. With $E(X^2)$ and $E(X)$, we obtain the standard deviation.
+    \item \textbf{Finding the neighbouring cells and their contribution :} Surrounding Cells are found by running an inner join on the cells frequency table (\cleanstyle{CELLFREQUENCYVIEW}), the inner join has to be done such that it considers only adjacent cells, for 3 dimensional(x, y and z) data each cell has (3 * 3 * 3 - 1) neighbour(s) (-1 here is to remove itself)  likewise if the cell is at the corners then the degree of freedom of that dimension decreases, hence a cell at x corner has (2 * 3 * 3 - 1) neighbour(s) or cells at x, y and z corners have (2 * 2 * 2 - 1) corners. To handle all these test cases in finding the neighbours we have used a user-defined function SurroundingCells. To find the contributions of the neighbour for each x,y,z we use sum aggregate function on neighbouring frequencies. Using these data we create a view which will have five columns -  no. of surrounding cells, X, Y and Z of the cell in question and sums of frequency contribution.
+    \item \textbf{Finding the Zscore :} We use a user-defined function \cleanstyle{ZScore} to calculate the Zscore for an individual cell, using the number of neighbouring cells and their contributions for each cell. We also use the fact that the weight of the individual cell is homogeneous and equal to 1. Hence we use the formula previously discussed and get the Zscore for individual cell and store the cells in descending order of Z-scores (in view \cleanstyle{finalResultsView}) and return the corresponding results.
 \end{enumerate}
 
 \subsection{Testing}
@@ -380,7 +384,7 @@ The output matched the given sample output.
 
 \subsection{Muffakham Ali Farhan Mohammed}
 \begin{enumerate}
-    \item implemented the Hot Cell Analysis of phase 2
+    \item Implemented the Hot Cell Analysis of phase 2
     \item Tested the phase 1 code on a local spark server 
     \item Tested the phase 2 code on a local spark server 
     \item Contributed to the System Documentation report
@@ -403,15 +407,6 @@ The output matched the given sample output.
     \item Contributed to System Documentation report.
 \end{enumerate}
 
-\subsection{Vivek Tiwary}
-\begin{enumerate}
-    \item Implemented Hot cell analysis of Phase 2
-    \item Tested and verified overall Phase 2 on local spark cluster
-    \item Tested and verified Phase 1 on spark cluster locally
-    \item Contributed to System Documentation report.
-    \item Took care of SBT ASSEMBLY for both phases.
-\end{enumerate}
-
 \subsection{Sudarsan Balaji Manikandan}
 \begin{enumerate}
     \item Worked on the IDE support analysis and verified Phase 1 on local Spark server.
@@ -419,6 +414,15 @@ The output matched the given sample output.
     \item Tested and verified Hot Zone Analysis on local Spark server.
     \item Set up a cluster on Azure with HDInsight3.6 and Spark 2.2.0 to test and verify the code.
     \item Contributed to System Documentation report.
+\end{enumerate}
+
+\subsection{Vivek Tiwary}
+\begin{enumerate}
+    \item Implemented Hot cell analysis of Phase 2
+    \item Tested and verified overall Phase 2 on local spark cluster
+    \item Tested and verified Phase 1 on spark cluster locally
+    \item Contributed to System Documentation report.
+    \item Took care of SBT ASSEMBLY for both phases.
 \end{enumerate}
 
 
